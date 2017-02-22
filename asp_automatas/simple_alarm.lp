@@ -5,8 +5,7 @@ state(start).state(ring).state(end).
 ring_time(r).
 
 %Time limit
-limit(6).
-time(T):- limit(M), T=1..M.
+limit(100).
 %all deltas (transitions)
 delta(start,T,start) :- not ring_time(T),time(T).
 delta(start,T,ring):- ring_time(T),time(T).
