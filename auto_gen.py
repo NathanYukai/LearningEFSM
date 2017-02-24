@@ -13,7 +13,7 @@ def write_to_file(file_name,trace):
 
 #parameters are file names
 def execute_clingo(trace, automata):
-    script = "./clingo " + trace + " " + automata
+    script = “clingo " + trace + " " + automata
     process = subprocess.Popen(script,stdout=subprocess.PIPE,shell=True)
     return process
 
@@ -255,7 +255,7 @@ def generate_trace(inputs,outputs,length):
     return trace 
 
 automata_file = './asp_automatas/simple_alarm.lp'
-print verify(generate_trace(1,0,5),automata_file)
+print verify(generate_trace(1,0,4),automata_file)
 
 
 # In[60]:
@@ -265,5 +265,6 @@ print verify(generate_trace(1,0,5),automata_file)
 
 # In[ ]:
 
-
-
+#not reachable throw out, 
+# state only has come in, not come out, goto error state
+#error always reachable?
