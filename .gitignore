@@ -3,3 +3,4 @@ haha.png
 generatedAutomata.lp
 useIlasp/working/*
 useIlasp/notworking/*
+**/*.DS_Store
