@@ -12,9 +12,9 @@
 
 #modeb(1,input(var(time),var(in))).
 
-:~delta(_,_,_,_,0).[1@1,0]
-:~delta(_,_,_,_,1).[1@1,0]
-:~delta(_,_,_,_,2).[1@2,2]
+:~delta(_,_,_,_,0).[1@2]
+:~delta(_,_,_,_,1).[1@2]
+:~delta(_,_,_,_,2).[2@1]
 
 condition(C,0):- C >= 0,C <= 0, input(_,C). 
 condition(C,1):- C >= 1,C <= 1, input(_,C). 
@@ -33,11 +33,10 @@ st(T+1,TO):- st(T,FROM),state(FROM),state(TO),delta(FROM,T,C,TO,ID),condition(C,
 :- not st(T,state4),trace_length(T).
 :- st(T,ST),st(T,ST2),ST!=ST2.
 :- delta(FROM,T,C,TO,ID), delta(FROM,T,C,TO,ID2), ID!=ID2.
-:- input(T,C),input(T,C2), C!=C2.
 
 
-0{input(T,0),input(T,1)}1:- time(T).
-time(T):- trace_length(T).
+1{input(T,0),input(T,1)}1:- time(T).
+time(T-1):- trace_length(T).
 time(T-1):- time(T), T>=1.
 
 %#pos(p0,{st(0,state0),st(1,state1),st(2,state3),st(3,state4)},{},{input(0,1).input(1,0).input(2,0).trace_length(3).}).
