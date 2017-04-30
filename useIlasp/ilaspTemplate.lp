@@ -1,12 +1,11 @@
-#max_penalty(500).
 condition(C,0):- C >= 0,C <= 0, input(_,C).
 condition(C,1):- C >= 1,C <= 1, input(_,C).
 condition(C,2):- C >= 0,C <= 1, input(_,C).
 
 
-0{input(T,0),input(T,1)}1:- time(T).
-time(T-1):- trace_length(T).
-time(T-1):- time(T), T>=1.
+%0{input(T,0),input(T,1)}1:- time(T).
+%time(T-1):- trace_length(T).
+%time(T-1):- time(T), T>=1.
 
 
 st(0,state0).

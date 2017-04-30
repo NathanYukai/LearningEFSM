@@ -1,4 +1,3 @@
-#max_penalty(300).
 #modeh(delta(const(st),var(time),var(in),const(st),const(cond_id))).
 
 #constant(cond_id,0).
