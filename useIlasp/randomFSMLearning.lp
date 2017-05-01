@@ -44,5 +44,3 @@ st(T+1,TO):- st(T,FROM),state(FROM),state(TO),delta(FROM,T,C,TO,ID),condition(C,
 #pos(p6,{st(0,state0),st(1,state1),st(2,state4),st(3,state2),st(4,state1),st(5,state4)},{},{input(0,0).input(1,1).input(2,1).input(3,1).input(4,1).trace_length(5).}).
 
 #max_penalty(300).
-%delta(state2,V0,V1,state1,1):- input(V0,V1).
-%delta(state4,V0,V1,state0,0):- input(V0,V1).

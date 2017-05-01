@@ -1,0 +1,4 @@
+#pos(p0,{st(0,state0),st(1,state1)},{},{input(0,0).trace_length(2).}).
+#pos(p_extra_1,{st(1,state1),st(2,state2)},{},{input(1,1).trace_length(2).}).
+#pos(p1,{st(1,state1),st(2,state2)},{},{input(1,0).trace_length(2).}).
+#pos(p2,{st(2,state2),st(3,state1)},{},{input(2,1).trace_length(4).}).
