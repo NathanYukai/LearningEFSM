@@ -18,3 +18,13 @@ st(T+1,TO):- st(T,FROM),state(FROM),state(TO),delta(FROM,T,C,TO,ID),condition(C,
 :- st(T,ST),st(T,ST2),ST!=ST2.
 :- delta(FROM,T,C,TO,ID), delta(FROM,T,C,TO,ID2), ID!=ID2.
 
+delta(state0,V0,V1,state2,1) :- input(V0,V1).
+
+delta(state2,V0,V1,state0,0) :- input(V0,V1).
+
+delta(state0,V0,V1,state0,0) :- input(V0,V1).
+
+state(state0).
+state(state1).
+state(state2).
+:- not st(T,state2), trace_length(T).

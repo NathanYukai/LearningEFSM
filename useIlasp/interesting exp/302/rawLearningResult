@@ -1,7 +1,0 @@
-delta(state2,V0,V1,state1,2) :- input(V0,V1).
-delta(state0,V0,V1,state1,2) :- input(V0,V1).
-delta(state1,V0,V1,state2,2) :- input(V0,V1).
-
-Pre-processing  : 0.004s
-Solve time      : 3.529s
-Total           : 3.532s

@@ -1,0 +1,6 @@
+delta(state0,V0,V1,state2,1) :- input(V0,V1).
+delta(state2,V0,V1,state0,0) :- input(V0,V1).
+delta(state0,V0,V1,state0,0) :- input(V0,V1).
+Pre-processing  : 0.005s
+Solve time      : 0.146s
+Total           : 0.151s
