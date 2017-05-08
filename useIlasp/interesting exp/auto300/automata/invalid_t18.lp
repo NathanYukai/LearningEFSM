@@ -1,1 +1,0 @@
-input(0,1).input(1,0).input(2,1).trace_length(3).

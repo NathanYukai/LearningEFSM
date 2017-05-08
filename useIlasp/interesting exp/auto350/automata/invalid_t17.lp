@@ -1,1 +1,0 @@
-input(0,0).trace_length(1).

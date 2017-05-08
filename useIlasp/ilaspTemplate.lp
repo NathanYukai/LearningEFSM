@@ -7,10 +7,6 @@ condition(C,2):- C >= 0,C <= 1, input(_,C).
 time(T-1):- trace_length(T).
 time(T-1):- time(T), T>=1.
 
-%1{error_at(X):X<T}1:- trace_length(T), X<T.
-%input(T,X):- pos_input(T,X), not error_at(T).
-%input(T,1-X):- pos_input(T,X), error_at(T).
-
 st(0,state0).
 st(T+1,TO):- st(T,FROM),state(FROM),state(TO),delta(FROM,T,C,TO,ID),condition(C,ID).
 
