@@ -1,9 +1,7 @@
 .ipynb_checkpoints/*
-haha.png
 generatedAutomata.lp
 useIlasp/working/*
 useIlasp/notworking/*
 **/*.DS_Store
 useIlasp/log/*
 useIlasp/modetmp.lp
-**/*.png

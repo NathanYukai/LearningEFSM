@@ -2,13 +2,10 @@ condition(C,0):- C >= 0,C <= 0, input(_,C).
 condition(C,1):- C >= 1,C <= 1, input(_,C). 
 condition(C,2):- C >= 0,C <= 1, input(_,C). 
 
-
-% Time, state, register value
-reg(0,state1,0).
-reg(0,state0,0).
-
 % Time, state
-st(0,state0).
+st(0,state0,0).
+
+
 
 %state, time, input,state, conditionID, REG_condition, REG_Value_NEW
 delta(state0,T,C,state0,0,0,2):- input(T,C).
