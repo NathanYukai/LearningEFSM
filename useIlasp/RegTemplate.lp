@@ -12,8 +12,13 @@ time(T-1):- time(T), T>=1.
 st(0,state0,0).
 origin(0).
 
+%decrease
 st(T+1,TO,V-1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,0),condition(C,ID),input(T,C).
+st(T+1,TO,0):- st(T,FROM,0),state(FROM),state(TO),delta(FROM,C,TO,ID,0,0),condition(C,ID),input(T,C).
+%increase
 st(T+1,TO,V+1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,1),condition(C,ID),input(T,C).
+st(T+1,TO,L):- st(T,FROM,L),state(FROM),state(TO),delta(FROM,C,TO,ID,L,1),condition(C,ID),input(T,C),reg_limit(L).
+%reset
 st(T+1,TO,R):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,2),condition(C,ID),origin(R),input(T,C).
 
 

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[4]:
+# In[8]:
 
 #utility functions
 import random, os, subprocess
@@ -112,7 +112,7 @@ def get_random_inputs(limit):
     return res
 
 
-# In[5]:
+# In[9]:
 
 #mutual exclusive condition needed for the deltas\n",
 # return a list of tuple , (from state, number of MX)\n",
@@ -236,7 +236,7 @@ def draw_graph(a,graph,file_name):
    
 
 
-# In[6]:
+# In[10]:
 
 import random
 # import pkg_resources
@@ -536,7 +536,7 @@ def gen_all_paths(graph,fr,to,more=False):
     return all_paths
 
 
-# In[7]:
+# In[11]:
 
 import os,re
 
@@ -845,7 +845,7 @@ def inputs_to_ilasp_examples(final_state,clingo_traces,invalid_traces,invalid_in
     
 
 
-# In[8]:
+# In[12]:
 
 def allStateValid(auto,graph):
     final_state = auto.state_num -1
@@ -972,7 +972,7 @@ class Automata:
         
 
 
-# In[9]:
+# In[13]:
 
 def logAutomataEncoding(auto, clingo_traces, inv_traces,learn_id):
     #setup directory
@@ -1076,8 +1076,29 @@ def learnTheAutomata_GiveExpAllOnce(auto,learn_id):
     
 
 
-# In[93]:
+# In[26]:
 
+def draw_reg_graph(graph_name, conMap, graph):
+    deltas = list(graph.edges())
+    
+    g = nx.nx_pydot.to_pydot(graph)
+    if(len(deltas)!=len(g.get_edges())):
+        print 'wrong edge, delta number in draw_reg_graph,', len(deltas), len(g.get_edges())
+    
+    for i in range(len(deltas)):
+        edge = g.get_edges()[i]
+        delta = (int(edge.obj_dict['points'][0]),int(edge.obj_dict['points'][1]))
+        cond,reg_v,op = conMap[delta]
+        if(op==0):
+            op_str = '-'
+        elif(op==1):
+            op_str = '+'
+        else:
+            op_str = 'r'
+        string = 'in: {} | reg: {}\n op: {}'.format(cond,reg_v,op_str)
+        edge.obj_dict['attributes']['label'] = string
+    g.write_png(graph_name)
+        
 def getRandomFrom(ran):
     res = random.choice(ran)
     return res
@@ -1095,17 +1116,43 @@ def getherMutualRequiredDelta(deltas):
     
     return res, deltas
 
-def fillDeltaString(d,cond,reg):
-    op = random.randint(0,2)
+def fillDeltaString(d,cond,reg,op):
     return 'delta(state{},C,state{},{},{},{}):- input(_,C). \n'.format(d[0],d[1],cond,reg,op)
     
+def _SplitConditions(reg_limit,mutual_req):
+    condOrNum = 0
+    condZeroNum = 0
+    condOneNum = 0
+
+    while(2*condOrNum+condZeroNum+condOneNum < mutual_req):
+        chose_range = [0,1,2]
+        cur = 2*condOrNum + condZeroNum + condOneNum
+        if( cur + reg_limit*2 + 2 > mutual_req ):
+            chose_range.remove(2)
+        if(condZeroNum == reg_limit):
+            chose_range.remove(0)
+        if(condOneNum == reg_limit):
+            chose_range.remove(1)
+
+        if(len(chose_range) == 0):
+            print 'something wrong , in get delta conditions!!!!!!!!!!!'
+            print condOrNum, condZeroNum,condOneNum, mutual_req,reg_limit
+        chose = random.choice(chose_range)
+
+        if (chose==0):
+            condZeroNum +=1
+        elif(chose==1):
+            condOneNum +=1
+        else:
+            condOrNum +=1
+    return condOrNum, condZeroNum, condOneNum
             
 def genRegDeltaConditions(graph,state_num,reg_limit):
     output = ''
     edges = graph.edges()
     
     #max out -  existing max
-    max_out_edge = 2*(reg_limit+1) -2
+    max_out_edge = 2*(reg_limit) -2
     for (s,m) in mutual_required(edges):
         add_num = getNormalRandomWithLimit(3,1.5,max_out_edge)
         for i in range(add_num):
@@ -1113,6 +1160,9 @@ def genRegDeltaConditions(graph,state_num,reg_limit):
             graph.add_edge(s,dst)
           
     deltas = list(graph.edges())
+    
+    deltaConditionMap = {}
+    
     while(len(deltas)>0):
         res, deltas = getherMutualRequiredDelta(deltas)
         reg_values = range(0,reg_limit)
@@ -1123,33 +1173,7 @@ def genRegDeltaConditions(graph,state_num,reg_limit):
         condZeroRegValues = reg_values[:]
         
         #number of zero, one, or conditions 
-        
-        condOrNum = 0
-        condZeroNum = 0
-        condOneNum = 0
-        
-        while(2*condOrNum+condZeroNum+condOneNum < len(res)):
-            chose_range = [0,1,2]
-            cur = 2*condOrNum + condZeroNum + condOneNum
-            if( cur + reg_limit*2 + 2 > len(res) ):
-                chose_range.remove(2)
-            if(condZeroNum == reg_limit):
-                chose_range.remove(0)
-            if(condOneNum == reg_limit):
-                chose_range.remove(1)
-                
-            if(len(chose_range) == 0):
-                print 'something wrong , in get delta conditions!!!!!!!!!!!'
-                print 'statenum', state_num
-                print 'reg_limit', reg_limit
-            chose = random.choice(chose_range)
-            
-            if (chose==0):
-                condZeroNum +=1
-            elif(chose==1):
-                condOneNum +=1
-            else:
-                condOrNum +=1
+        condOrNum, condZeroNum, condOneNum = _SplitConditions(reg_limit,len(res))
         
         #do or condition first, 
         #so later dont need to get intersection
@@ -1157,30 +1181,41 @@ def genRegDeltaConditions(graph,state_num,reg_limit):
             reg_v = getRandomFrom(condOneRegValues)
             condOneRegValues.remove(reg_v)
             condZeroRegValues.remove(reg_v)
-            output += fillDeltaString(res[0],2,reg_v)
-            res.remove(res[0])
-        
+            
+            op = random.randint(0,2)
+            output += fillDeltaString(res[0],2,reg_v,op)
+            deltaConditionMap[res[0]] = (2,reg_v,op)
+            res.remove(res[0])    
             
         for i in range(condOneNum):
             reg_v = getRandomFrom(condOneRegValues)
             condOneRegValues.remove(reg_v)
-            output += fillDeltaString(res[0],1,reg_v)
+            
+            op = random.randint(0,2)
+            output += fillDeltaString(res[0],1,reg_v,op)
+            deltaConditionMap[res[0]] = (1,reg_v,op)
             res.remove(res[0])
 
         for i in range(condZeroNum):
             reg_v = getRandomFrom(condZeroRegValues)
             condZeroRegValues.remove(reg_v)
-            output += fillDeltaString(res[0],0,reg_v)
+            
+            op = random.randint(0,2)
+            output += fillDeltaString(res[0],0,reg_v,op)
+            deltaConditionMap[res[0]] = (0,reg_v,op)
             res.remove(res[0])
                
 #     print output
-    return output
+    return output,deltaConditionMap
 
 def RegAutomataValid(auto_file,test_range):
+    count = 0
     for i in range(1000):
         ran_inputs = get_random_inputs(test_range)
         ran_trace = string_to_trace(ran_inputs)
         if(check_trace_valid(ran_trace,auto_file)):
+            count +=1
+        if(count >1):
             return True
     
     return False
@@ -1221,8 +1256,9 @@ class RegAutomata:
         
         graph = getValidGraph(self)
         
-        deltas_str = genRegDeltaConditions(graph,self.state_num,self.reg_limit)
+        deltas_str,conMap = genRegDeltaConditions(graph,self.state_num,self.reg_limit)
         
+        self.graph = graph
         extra = ''
         for i in range(self.state_num):
             extra += 'state(state{}).\n'.format(i)
@@ -1232,26 +1268,28 @@ class RegAutomata:
         
         append_to_file(dst,deltas_str)
         append_to_file(dst,extra)
+        
+        return conMap
        
         
 
 
-# In[98]:
+# In[27]:
 
-def getPoolFileName(path):
+def getPoolFileID(path):
     i = 0
     if(not os.path.isdir(path)):
         os.makedirs(path)
-    while(os.path.isfile( os.path.join(path,'id{}.lp'.format(i) ))):
+    while(os.path.isfile( os.path.join(path,'id_{}.lp'.format(i) ))):
         i+=1
         
-    return os.path.join(path,'id{}.lp'.format(i))
+    return i
 
 def generateRegAutoPool():
     pool = 'useIlasp/RegAutomataPool/'
     if(not os.path.isdir(pool)):
         os.makedirs('useIlasp/RegAutomataPool/')
-
+    count = 0
     for i in range(100000):
         print i
 
@@ -1259,16 +1297,22 @@ def generateRegAutoPool():
         reg_lim = random.randint(2,4)
         generatedReg_file = 'generatedReg.lp'
         auto = RegAutomata(st_number,reg_lim)
-        auto.generate_automata(generatedReg_file)
+        conMap = auto.generate_automata(generatedReg_file)
         valid = RegAutomataValid(generatedReg_file,1000)
         if(valid):
+            count +=1
+            print 'found one!'
             dir_name = 'regAutomataState_{}Reg_{}'.format(st_number,reg_lim)
             path = os.path.join(pool,dir_name)
-            file_name = getPoolFileName(path)
+            file_id = getPoolFileID(path)
+            file_name = os.path.join(path,'id_{}.lp'.format(file_id))
+            graph_name = os.path.join(path,'id_{}.png'.format(file_id))
+            draw_reg_graph(graph_name, conMap,auto.graph)
             
             copyfile(generatedReg_file,file_name)
     
-    print 'done!'
+    print 'done!, found reg auto:', count
     
 generateRegAutoPool()
+
 
