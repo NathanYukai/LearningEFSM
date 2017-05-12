@@ -1,10 +1,16 @@
-#modeh(delta(const(st),var(time),var(in),const(st),const(cond_id),const(cond_id),const(reg_value))).
+#modeh(delta(const(st),var(in),const(st),const(cond_id),const(reg_value),const(reg_code))).
 
 #constant(cond_id,0).
 #constant(cond_id,1).
 #constant(cond_id,2).
 
+#constant(reg_code,0).
+#constant(reg_code,1).
+#constant(reg_code,2).
 
-#modeb(1,input(var(time),var(in))).
 
-%add register_value constant!
+
+#modeb(1,input(_,var(in))).
+
+%add state constant!
+%add reg_value constant 

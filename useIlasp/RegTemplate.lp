@@ -1,5 +1,3 @@
-
-
 condition(C,0):- C >= 0,C <= 0, input(_,C). 
 condition(C,1):- C >= 1,C <= 1, input(_,C). 
 condition(C,2):- C >= 0,C <= 1, input(_,C). 
@@ -11,25 +9,20 @@ time(T-1):- time(T), T>=1.
 
 
 % Time, state
-st(0,state0).
+st(0,state0,0).
+origin(0).
 
-st(T+1,TO):- st(T,FROM),state(FROM),state(TO),delta(FROM,T,C,TO,ID,REG_O,_),condition(C,ID),reg(T,FROM,REG_O).
+st(T+1,TO,V-1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,0),condition(C,ID).
+st(T+1,TO,V+1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,1),condition(C,ID).
+st(T+1,TO,R):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,2),condition(C,ID),origin(R).
 
-%update register value
-reg(T+1,ST,REG_N):- reg(T,ST,REG_O), st(T,ST), delta(ST,T,_,_,_,REG_O,REG_N).
-
-%other state keep remembering it’s old value, maybe don’t need this part
-% if not, for performance reason, need to find a way of getting the closest TIME
-reg(T+1,ST_DIFF,REG_O):- reg(T,ST_DIFF,REG_O), st(T,ST), delta(ST,T,_,_,_,_,_), ST != ST_DIFF.
 
 :- st(T,ST),st(T,ST2),ST!=ST2.
+:- st(_,_,L+1), reg_limit(L).
+:- st(_,_,V), V < 0.
 
+:- not accept.
 
-%things to add:
-
-%state
-%register value for all state
-%deltas
-
-%constraint for at end state,
-% for having expected value
+%add 
+%  accept:- 
+%reg_limit/1
