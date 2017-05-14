@@ -1,7 +1,4 @@
-%add ringing time , canbe changed via constant variables 
-
 %add snoozing by ading vars in delta, not extra states.
-%
 
 %define states
 state(start).state(active).state(end).
