@@ -31,18 +31,19 @@ st(T+1,TO,R):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,2),condit
 %add 
 %  accept:- 
 %reg_limit/1
-delta(state0,C,state0,1,0,1):- input(_,C). 
-delta(state0,C,state1,1,1,2):- input(_,C). 
-delta(state0,C,state2,1,2,1):- input(_,C). 
-delta(state0,C,state3,0,0,0):- input(_,C). 
-delta(state0,C,state4,0,1,2):- input(_,C). 
-delta(state1,C,state4,0,1,2):- input(_,C). 
-delta(state2,C,state1,1,2,0):- input(_,C). 
-delta(state3,C,state2,0,0,0):- input(_,C). 
+delta(state0,C,state2,0,0,1):- input(_,C). 
+delta(state1,C,state0,1,0,1):- input(_,C). 
+delta(state1,C,state2,1,1,0):- input(_,C). 
+delta(state1,C,state3,0,1,0):- input(_,C). 
+delta(state2,C,state0,1,0,1):- input(_,C). 
+delta(state2,C,state1,1,1,0):- input(_,C). 
+delta(state2,C,state2,0,0,2):- input(_,C). 
+delta(state2,C,state4,0,1,1):- input(_,C). 
+delta(state3,C,state2,0,0,1):- input(_,C). 
 state(state0).
 state(state1).
 state(state2).
 state(state3).
 state(state4).
-accept :- st(T,state4,1),trace_length(T).
-reg_limit(3).
+accept :- st(T,state4,2),trace_length(T).
+reg_limit(2).
