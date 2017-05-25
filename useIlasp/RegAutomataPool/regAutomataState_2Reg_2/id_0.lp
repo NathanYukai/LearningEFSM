@@ -14,27 +14,26 @@ origin(0).
 
 %decrease
 st(T+1,TO,V-1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,0),condition(C,ID),input(T,C).
-st(T+1,TO,0):- st(T,FROM,0),state(FROM),state(TO),delta(FROM,C,TO,ID,0,0),condition(C,ID),input(T,C).
 %increase
 st(T+1,TO,V+1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,1),condition(C,ID),input(T,C).
-st(T+1,TO,L):- st(T,FROM,L),state(FROM),state(TO),delta(FROM,C,TO,ID,L,1),condition(C,ID),input(T,C),reg_limit(L).
 %reset
 st(T+1,TO,R):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,2),condition(C,ID),origin(R),input(T,C).
+%do nothing
+st(T+1,TO,V):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,3),condition(C,ID),input(T,C).
 
 
 :- st(T,ST,_),st(T,ST2,_),ST!=ST2.
-:- st(_,_,L+1), reg_limit(L).
+:- st(_,_,L), reg_limit(L).
 :- st(_,_,V), V < 0.
 
-:- not accept.
 
 %add 
 %  accept:- 
 %reg_limit/1
-delta(state0,C,state0,1,1,0):- input(_,C). 
 delta(state0,C,state1,1,0,1):- input(_,C). 
-delta(state1,C,state1,1,1,0):- input(_,C). 
+delta(state1,C,state0,0,1,2):- input(_,C). 
 state(state0).
 state(state1).
-accept :- st(T,state1,0),trace_length(T).
+accept :- st(T,state1,1),trace_length(T).
 reg_limit(2).
+:- not accept.

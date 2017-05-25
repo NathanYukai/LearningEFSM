@@ -1,0 +1,67 @@
+delta(state7,V0,state7,1) :- input(_,V0).
+delta(state7,V0,state2,0) :- input(_,V0).
+delta(state2,V0,state6,2) :- input(_,V0).
+delta(state6,V0,state3,0) :- input(_,V0).
+delta(state6,V0,state6,1) :- input(_,V0).
+delta(state0,V0,state0,0) :- input(_,V0).
+delta(state0,V0,state3,1) :- input(_,V0).
+delta(state3,V0,state7,2) :- input(_,V0).
+Pre-processing  : 0.021s
+Solve time      : 7280.18s
+Total           : 7280.2s
+delta(state6,V0,state3,2) :- input(_,V0).
+delta(state2,V0,state6,1) :- input(_,V0).
+delta(state2,V0,state3,0) :- input(_,V0).
+delta(state1,V0,state2,1) :- input(_,V0).
+delta(state1,V0,state0,0) :- input(_,V0).
+delta(state0,V0,state3,1) :- input(_,V0).
+delta(state3,V0,state1,0) :- input(_,V0).
+delta(state0,V0,state2,0) :- input(_,V0).
+delta(state3,V0,state7,1) :- input(_,V0).
+Pre-processing  : 0.027s
+Solve time      : 19202.2s
+Total           : 19202.2s
+delta(state5,V0,state7,1) :- input(_,V0).
+delta(state1,V0,state3,0) :- input(_,V0).
+delta(state1,V0,state4,1) :- input(_,V0).
+delta(state4,V0,state2,1) :- input(_,V0).
+delta(state0,V0,state5,1) :- input(_,V0).
+delta(state0,V0,state4,0) :- input(_,V0).
+delta(state5,V0,state1,0) :- input(_,V0).
+delta(state3,V0,state2,0) :- input(_,V0).
+delta(state2,V0,state5,2) :- input(_,V0).
+delta(state3,V0,state5,1) :- input(_,V0).
+delta(state4,V0,state5,0) :- input(_,V0).
+Pre-processing  : 0.016s
+Solve time      : 60157.4s
+Total           : 60157.5s
+delta(state7,V0,state0,2) :- input(_,V0).
+delta(state6,V0,state7,1) :- input(_,V0).
+delta(state6,V0,state2,0) :- input(_,V0).
+delta(state5,V0,state7,1) :- input(_,V0).
+delta(state5,V0,state3,0) :- input(_,V0).
+delta(state4,V0,state1,0) :- input(_,V0).
+delta(state2,V0,state5,2) :- input(_,V0).
+delta(state0,V0,state4,0) :- input(_,V0).
+delta(state3,V0,state4,2) :- input(_,V0).
+delta(state1,V0,state6,0) :- input(_,V0).
+delta(state0,V0,state6,1) :- input(_,V0).
+delta(state4,V0,state2,1) :- input(_,V0).
+Pre-processing  : 0.036s
+Solve time      : 14569.1s
+Total           : 14569.1s
+delta(state6,V0,state5,2) :- input(_,V0).
+delta(state5,V0,state7,1) :- input(_,V0).
+delta(state5,V0,state3,0) :- input(_,V0).
+delta(state1,V0,state6,1) :- input(_,V0).
+delta(state3,V0,state1,1) :- input(_,V0).
+delta(state2,V0,state6,1) :- input(_,V0).
+delta(state0,V0,state2,0) :- input(_,V0).
+delta(state1,V0,state5,0) :- input(_,V0).
+delta(state0,V0,state5,1) :- input(_,V0).
+delta(state4,V0,state6,0) :- input(_,V0).
+delta(state2,V0,state0,0) :- input(_,V0).
+delta(state3,V0,state4,0) :- input(_,V0).
+Pre-processing  : 0.015s
+Solve time      : 4596.16s
+Total           : 4596.18s

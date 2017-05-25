@@ -7,7 +7,7 @@
 #constant(reg_code,0).
 #constant(reg_code,1).
 #constant(reg_code,2).
-
+#constant(reg_code,3).
 
 
 #modeb(1,input(_,var(in))).
