@@ -1,6 +1,8 @@
-condition(C,0):- C >= 0,C <= 0, input(_,C).
-condition(C,1):- C >= 1,C <= 1, input(_,C).
-condition(C,2):- C >= 0,C <= 1, input(_,C).
+condition(0,0).
+condition(1,1).
+
+condition(0,2).
+condition(1,2).
 
 
 1{input(T,0);input(T,1)}1:- time(T).

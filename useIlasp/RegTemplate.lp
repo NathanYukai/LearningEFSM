@@ -1,6 +1,8 @@
-condition(C,0):- C >= 0,C <= 0, input(_,C). 
-condition(C,1):- C >= 1,C <= 1, input(_,C). 
-condition(C,2):- C >= 0,C <= 1, input(_,C). 
+condition(0,0). 
+condition(1,1).
+
+condition(0,2).
+condition(1,2).
 
 
 1{input(T,0);input(T,1)}1:- time(T).
@@ -13,7 +15,7 @@ st(0,state0,0).
 origin(0).
 
 %decrease
-st(T+1,TO,V-1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,0),condition(C,ID),input(T,C).
+st(T+1,TO,V-1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,0),condition(C,ID),input(T,C),regCondition(V,RID).
 %increase
 st(T+1,TO,V+1):- st(T,FROM,V),state(FROM),state(TO),delta(FROM,C,TO,ID,V,1),condition(C,ID),input(T,C).
 %reset

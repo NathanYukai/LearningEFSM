@@ -12,5 +12,7 @@
 
 #modeb(1,input(_,var(in))).
 
+#modeh(final_reg(const(reg_value))).
+
 %add state constant!
 %add reg_value constant 

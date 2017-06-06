@@ -1,12 +1,12 @@
-#modeh(delta(const(st),const(st),const(cond_id))).
-
-#constant(cond_id,0).
-#constant(cond_id,1).
-#constant(cond_id,2).
-
-#constant(st,state0).
-#constant(st,state1).
-#constant(st,state2).
+%#modeh(delta(const(st),const(st),const(cond_id))).
+%
+%#constant(cond_id,0).
+%#constant(cond_id,1).
+%#constant(cond_id,2).
+%
+%#constant(st,state0).
+%#constant(st,state1).
+%#constant(st,state2).
 
 condition(C,0):- C >= 0,C <= 0, input(_,C).
 condition(C,1):- C >= 1,C <= 1, input(_,C).
@@ -27,10 +27,17 @@ nonDetermin(ST):- delta(ST,TO1,_), state(TO1),state(TO2), delta(ST,TO2,_),TO1 !=
 state(state0).
 state(state1).
 state(state2).
+state(state3).
 
-accept :- st(T,state2),trace_length(T).
+accept :- st(T,state3),trace_length(T).
 
-#pos(p1,{accept},{},{input(0,1).trace_length(1).}).
-#pos(p2,{},{accept},{input(0,1).trace_length(1).}).
+delta(state0,state1,1).
+delta(state0,state2,1).
+delta(state0,state3,1).
+
+
+input(0,1). trace_length(1).
+%#pos(p1,{accept},{},{input(0,1).trace_length(1).}).
+%%#pos(p2,{},{accept},{input(0,1).trace_length(1).}).
 %#pos(p4,{},{accept},{input(0,1).input(1,1).trace_length(2).}).
-#neg(n3,{accept},{},{input(0,0).trace_length(1).}).
+%#neg(n3,{accept},{},{input(0,0).trace_length(1).}).

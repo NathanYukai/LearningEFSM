@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[111]:
+# In[1091]:
 
 #utility functions
 import random, os, subprocess
@@ -129,7 +129,7 @@ def mapLog(arr):
     
 
 
-# In[89]:
+# In[1092]:
 
 #mutual exclusive condition needed for the deltas\n",
 # return a list of tuple , (from state, number of MX)\n",
@@ -253,7 +253,7 @@ def draw_graph(a,graph,file_name):
    
 
 
-# In[90]:
+# In[1093]:
 
 import random
 # import pkg_resources
@@ -287,8 +287,8 @@ def gen_condition_tostr(output,conditions):
 def deltaToString(fr,to,cond):
     res = ''
     res += "delta("+ fr+ ","
-    res += cond_param+ ","+ to+ ","+cond+ "):-"
-    res += 'input('+'_' + "," +cond_param+')' +'.\n'
+    res += cond_param + ","
+    res +=  to+ ","+cond+ "):- input(_,C). \n"
     return res
 
 def gen_deltas_tostr(output,deltas,states):
@@ -560,7 +560,7 @@ def gen_all_paths(graph,fr,to,more=False):
     return all_paths
 
 
-# In[91]:
+# In[1094]:
 
 import os,re
 
@@ -610,6 +610,14 @@ def getRawDelta(raw):
     res = ''
     for r in raw:
         if(not 'delta' in r):
+            continue
+        res += r + '\n'
+    return res
+
+def getRawTransition(raw):
+    res = ''
+    for r in raw:
+        if(not 'st(T+1' in r):
             continue
         res += r + '\n'
     return res
@@ -693,13 +701,6 @@ def gen_bare_minimum_example(auto):
         exps.append(e)
     return '\n'.join(exps)+'\n'
 
-def getConditionCode(cond):
-    if(cond == [0,0]):
-        return 0
-    elif(cond ==[1,1]):
-        return 1
-    elif(cond ==[0,1]):
-        return 2
     
 def StateInfoForClingo(auto):
     res = ''
@@ -736,7 +737,7 @@ def testAutomataAreSame(learned_auto_asp_file,learn_id,test_range,test_time):
             return False,log_str, err_trace
     return True,log_str, err_trace
     
-def checkLearningIsRight_ByTest(auto,learningRes,learn_id):
+def checkLearningIsRight_ByTest(auto,learningRes,learn_id,inductive = False):
     a = learningRes.stdout.readline()
     output = []
     while(a):
@@ -748,11 +749,17 @@ def checkLearningIsRight_ByTest(auto,learningRes,learn_id):
         a = learningRes.stdout.readline()
         
     #get learned delta(in asp)
-    deltas = getRawDelta(output)
+    if(inductive):
+        template = 'useIlasp/inductiveDFATemplate.lp'
+        deltas = getRawTransition(output)
+    else:
+        template = 'useIlasp/ilaspTemplate.lp'
+        deltas = getRawDelta(output)
     time = getTimeFromLearning(output[-2])
     
     learned_auto_asp_file = getLogPath('learnedAutomata.lp',learn_id)
-    copyfile('useIlasp/ilaspTemplate.lp',learned_auto_asp_file)
+    
+    copyfile(template,learned_auto_asp_file)
     
     append_to_file(learned_auto_asp_file, deltas)
     stateInfo = StateInfoForClingo(auto)
@@ -839,7 +846,31 @@ def completeIlaspEncoding(ilasp_file,examples,state_num):
     
     stateInfo = stateInfoForIlaspLearning(state_num)
     append_to_file(ilasp_file,stateInfo)
-    append_to_file(ilasp_file,'#max_penalty({}).\n'.format(2*4*state_num+2))
+#     append_to_file(ilasp_file,'#max_penalty({}).\n'.format(2*2*state_num+2))
+    append_to_file(ilasp_file,'#max_penalty({}).\n'.format(100))
+    
+
+    
+def getInductiveMode(stateNum):
+    rule= '1 ~ st(T+1,state{}):- st(T,state{}),input(T,{}).\n'
+    state = range(stateNum)
+    mode = ''
+    for fr in state:
+        for to in state:
+            for i in ['0','1','_']:
+                mode+=(rule.format(fr,to,i))
+    return mode
+def completeILASPInductiveEncoding(ilasp_file,examples,state_num):
+    ilasp_template = 'useIlasp/inductiveDFATemplate.lp'
+    mode = getInductiveMode(state_num)
+    
+    copyfile(ilasp_template,ilasp_file)
+    append_to_file(ilasp_file,examples)
+    append_to_file(ilasp_file,mode)
+    
+    stateInfo = stateInfoForIlaspLearning(state_num)
+    append_to_file(ilasp_file,stateInfo)
+    append_to_file(ilasp_file,'#max_penalty({}).\n'.format(2*state_num+1))
     
     
 def completeRegIlaspEncoding(ilasp_file,examples,state_num,reg_limit):
@@ -854,7 +885,7 @@ def completeRegIlaspEncoding(ilasp_file,examples,state_num,reg_limit):
     
     stateInfo = stateRegInfoForIlaspLearning(state_num,reg_limit)
     append_to_file(ilasp_file,stateInfo)
-    append_to_file(ilasp_file,'#max_penalty({}).\n'.format(2*4*state_num+2))
+    append_to_file(ilasp_file,'#max_penalty({}).\n'.format(100))
     
 def inputs_to_example_template(head_str, trace,final_state,count=0,error=False):
     res = ''
@@ -889,7 +920,7 @@ def inputs_to_ilasp_examples(final_state,clingo_traces,invalid_traces,invalid_in
     
 
 
-# In[92]:
+# In[1095]:
 
 def allStateValid(auto,graph):
     final_state = auto.state_num -1
@@ -1016,7 +1047,7 @@ class Automata:
         
 
 
-# In[93]:
+# In[1096]:
 
 def logAutomataEncoding(auto, clingo_traces, inv_traces,learn_id):
     #setup directory
@@ -1053,74 +1084,8 @@ def sumGeneration(v_path,v_cond,inv_path,inv_cond):
     res += "invalid conditions:\n" + "\n".join(str(x) for x in inv_cond)+'\n'
     return res
 
-#REMEMBER !!!!!! to change stateInfoForIlaspLearning, fo
-def learnTheAutomata_GiveExpAllOnce(auto,learn_id):  
-    #file names
-    graphFile = getLogPath('graph.png',learn_id)
-    learningWithFull = getLogPath('learningWithFull.lp',learn_id)
-    learningWithminimum = getLogPath('learningWithMinimum.lp',learn_id)
-    
-    draw_graph(auto,auto.graph,graphFile)
-    
-    #get paths, for pos exp, two kinds of neg-exp
-    valid_paths = auto.gen_valid_paths()
-    invalid_paths,invalid_internal_paths = auto.gen_invalid_paths()
-    
-    
-    #to conditions
-    path_cond = paths_to_conditions(auto,valid_paths)
-    invalid_p_cond = invalid_path_to_conditions(auto,invalid_paths)
-    invalid_int_p_cond = invalid_path_to_conditions(auto,invalid_internal_paths)
-    
-    #to more conditions 
-    path_cond_determin = conditions_to_determininistic(path_cond)
-    inv_p_cond_determin = conditions_to_determininistic(invalid_p_cond)
-    inv_int_p_cond_determin = conditions_to_determininistic(invalid_int_p_cond)
-    
-    #to traces
-    clingo_traces = conditions_to_traces(path_cond_determin,auto)
-    invalid_traces = invalid_conditions_to_traces(inv_p_cond_determin,auto)
-    invalid_int_traces = invalid_conditions_to_traces(inv_int_p_cond_determin,auto)
 
-    result = logAutomataEncoding(auto, clingo_traces,                                 invalid_traces+invalid_int_traces,learn_id)
-    
-    
-    #full example
-    ilasp_exp_full = inputs_to_ilasp_examples(auto.state_num-1,clingo_traces,                                              invalid_traces, invalid_int_traces)
-    
-    #bare minimum
-    ilasp_exp_minimum = gen_bare_minimum_example(auto)
-    
-    
-    #add stateinfo, add and modify search space
-    completeIlaspEncoding(learningWithFull,ilasp_exp_full,len(auto.states))
-    completeIlaspEncoding(learningWithminimum,ilasp_exp_minimum,len(auto.states))
-    
-#     learning_minimum_res = execute_ILASP(learningWithminimum)
-    learning_full_res = execute_ILASP(learningWithFull)
-    
-    
-    learningSuccess, time,_ =  checkLearningIsRight_ByTest(auto, learning_full_res,learn_id)
-    result = result and learningSuccess
-    
-    
-    #logging things
-    log('ilasp_minimumexp',ilasp_exp_minimum,learn_id)
-    log('ilasp_full_exp',ilasp_exp_full,learn_id)
-    info = auto.summarize()
-    log('autoinfo',info,learn_id)
-    
-    sumGen = sumGeneration(valid_paths,path_cond_determin,                           invalid_paths+invalid_internal_paths,inv_p_cond_determin)
-    log('generatedPathInfo',sumGen,learn_id)
-    
-    return result, time
-
-
-
-    
-
-
-# In[94]:
+# In[1097]:
 
 def draw_reg_graph(graph_name, conMap, graph):
     deltas = list(graph.edges())
@@ -1163,7 +1128,7 @@ def getherMutualRequiredDelta(deltas):
     return res, deltas
 
 def fillDeltaString(d,cond,reg,op):
-    return 'delta(state{},C,state{},{},{},{}):- input(_,C). \n'.format(d[0],d[1],cond,reg,op)
+    return 'delta(state{},V0,state{},{},{},{}):- input(_,C). \n'.format(d[0],d[1],cond,reg,op)
     
 def _SplitConditions(reg_limit,mutual_req):
     condOrNum = 0
@@ -1322,7 +1287,7 @@ class RegAutomata:
         
 
 
-# In[95]:
+# In[1098]:
 
 def getPoolFileID(path):
     i = 0
@@ -1362,7 +1327,7 @@ def generateRegAutoPool():
     print 'done!, found reg auto:', count
 
 
-# In[96]:
+# In[1099]:
 
 def flip_bit_in_inputs(inputs,index):
     flipped = str(1-int(inputs[index]))
@@ -1435,6 +1400,41 @@ def getUnmatchingTraces(learn_id,test_range,auto,num_of_exp):
     
     return valid,invalid
 
+def getUnmatchingTraces_checkValidFirst(learn_id,test_range,auto,num_of_exp):
+    valid = []
+    invalid = []
+    generatedAutomata = getGeneratedAutomataFile(learn_id)
+    learned_auto_asp_file = getLogPath('learnedAutomata.lp',learn_id)
+    
+    for i in range(num_of_exp):
+        ran_inputs = get_random_inputs(test_range)
+        _,miss,err = getMissing_ErrorInputs_index(len(ran_inputs),                     auto.missing_num, auto.missing_prob, auto.error_num, auto.error_prob)
+        
+        missAndErrLog = getLogPath('miss&errorINdex',learn_id)
+        if(len(miss)+len(err)>0):
+            log_str = 'trace: {}\n miss:{} \n err: {}\n'.format(ran_inputs,miss,err)
+            if(os.path.isfile(missAndErrLog)):
+                append_to_file(missAndErrLog,log_str)
+            write_to_file(missAndErrLog,log_str)
+        
+        raw_trace = string_to_trace(ran_inputs)
+        trace = inputs_to_trace_with_missing_err(ran_inputs,miss,err)
+        
+        correct = check_trace_valid(raw_trace,generatedAutomata)
+        if(os.path.isfile(learned_auto_asp_file)):
+            correct_learned = check_trace_valid(raw_trace,learned_auto_asp_file)
+            if(correct and (not correct_learned)):
+                valid.append(trace)
+            elif((not correct) and (correct_learned)):
+                invalid.append(trace)
+        else:
+            if(correct):
+                valid.append(trace)
+            else:
+                invalid.append(trace)
+    
+    return valid,invalid
+
 def traces_to_examples(valid_traces,invalid_traces, hasError =False):
     res = ''
     penalty = ''
@@ -1450,7 +1450,7 @@ def traces_to_examples(valid_traces,invalid_traces, hasError =False):
         res += "#pos(n{0},{{}},{{accept}},{1}).\n".format(str(iv)+penalty,modified)
     return res
 
-def learnAutomata_WithTeacher(auto,learn_id,test_range,test_num,learn_once=False):
+def learnAutomata_WithTeacher(auto,learn_id,test_range,test_num,learn_once=False,inductive=False):
     #file names
     graphFile = getLogPath('graph.png',learn_id)
     learningTask = getLogPath('learningTask.lp',learn_id)
@@ -1470,23 +1470,33 @@ def learnAutomata_WithTeacher(auto,learn_id,test_range,test_num,learn_once=False
         #return ["input(0,0).input(1,1).input(2,1).trace_length(3)","..."]
         #note in here, if contain missing or error,
         #make sure they are tested after modified the strings
-        new_v, new_inv = getUnmatchingTraces(learn_id,test_range,auto,test_num)
-        valid_trace += new_v
-        invalid_trace += new_inv
+        
+#         new_v, new_inv = getUnmatchingTraces(learn_id,test_range,auto,test_num*2)
+        new_v, new_inv = getUnmatchingTraces(learn_id,test_range,auto,test_num*2)
+        
+        valid_trace += new_v[:test_num]
+        invalid_trace += new_inv[:test_num]
         
         exps = traces_to_examples(valid_trace,invalid_trace,auto.error_num!=0)    
 
-        completeIlaspEncoding(learningTask,exps,len(auto.states))
+        if(inductive):
+            completeILASPInductiveEncoding(learningTask,exps,len(auto.states))
+        else:
+            completeIlaspEncoding(learningTask,exps,len(auto.states))
         
+    
         learning_res = execute_ILASP(learningTask)
-        learningSuccess, time, err_trace = checkLearningIsRight_ByTest(auto,                                            learning_res,learn_id)
-        if(err_trace != ''):
+        learningSuccess, time, is_positive_exp, err_trace = checkLearningIsRight_ByILASP(auto,                                            learning_res,learn_id,auto.state_num)
+
+        if(is_positive_exp):
+            valid_trace.append(err_trace)
+        else:
             invalid_trace.append(err_trace)
         if(learn_once):
             return learningSuccess,time, 1
         total_time += time
         learned = learningSuccess
-   
+        
     return learned, total_time, iteration
 
 
@@ -1555,7 +1565,48 @@ def learn_RegAutomata_WithTeacher(auto_file,state_num,reg_limit,                
     return learned, total_time, iteration
 
 
-# In[97]:
+def learn_RegAutomata_FromDFA_teacher(auto,state_num,reg_limit,                                  learn_id,test_range,test_num,learn_once=False):
+    #file names
+    graphFile = getLogPath('graph.png',learn_id)
+    learningTask = getLogPath('reglearningTask.lp',learn_id)
+    
+    draw_graph(auto,auto.graph,graphFile)
+
+    logAutomataEncoding(auto, [],[],learn_id)
+        
+    learned = False
+    
+    valid_trace = get_init_valid_trace(auto,learn_id)[:test_num]
+    invalid_trace = []
+    total_time = 0
+    iteration = 0
+    while(not learned):
+        iteration += 1
+        new_v, new_inv = getUnmatchingTraces(learn_id,test_range,auto,test_num*2)
+        valid_trace += new_v[:test_num]
+        invalid_trace += new_inv[:test_num]
+        
+        exps = traces_to_examples(valid_trace,invalid_trace,auto.error_num!=0)    
+
+        completeRegIlaspEncoding(learningTask,exps,state_num,reg_limit)
+        
+        learning_res = execute_ILASP(learningTask)
+        learningSuccess, time, is_positive_exp, err_trace = checkLearningIsRight_ByTest(auto,                                            learning_res,learn_id)
+
+        if(is_positive_exp):
+            valid_trace.append(err_trace)
+        else:
+            invalid_trace.append(err_trace)
+        if(learn_once):
+            return learningSuccess,time, 1
+        total_time += time
+        learned = learningSuccess
+        
+    return learned, total_time, iteration
+    
+
+
+# In[1100]:
 
 import matplotlib
 matplotlib.use('Agg')
@@ -1564,7 +1615,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
-draw_colors = ['r','b','y','g','c','m']
+draw_colors = ['r','b','y','g','c','m','k']
 
 def produceMissingErrorGraph():
 
@@ -1575,13 +1626,12 @@ def produceMissingErrorGraph():
 
     correct_num = 0
 
-    example_number = [10,20,30,40,60,80]
-    missing_probs = [0.05,0.2,0.4,0.6,0.7]
-#     noisy_level = [0.05,0.1,0.2,0.3,0.4,0.7]
+    example_number = [10,30]
+    missing_probs = [0.1,0.2]
     # missing_probs = [0]
     # example_number = [10,]
-    num_states = [2,3,4]
-    run_total = 50
+    num_states = [3,4,5]
+    run_total = 2
 
     record = {}
 
@@ -1593,7 +1643,7 @@ def produceMissingErrorGraph():
     #only count successfully learned time?
     time_rec = []
     for mp in range(len(missing_probs)):
-        patches.append(mpatches.Patch(color=draw_colors[mp][0],                                      label='Noisy percentage '+ str(missing_probs[mp])))
+        patches.append(mpatches.Patch(color=draw_colors[mp][0],                                      label='Noisy Level '+ str(missing_probs[mp])))
         accuracy = []
         total_time = 0
         total_learned = 0
@@ -1605,11 +1655,10 @@ def produceMissingErrorGraph():
                     print '{} left!',indicate_process
                     indicate_process -=1
                     auto = Automata(st_num,0,1)
-#                     auto.setMissingInput(noisy_level[0],missing_probs[mp])
-                    auto.setMissingInput(missing_probs[mp],1)
-#                     auto.setErrorInput(missing_probs[mp],0.3)
+#                     auto.setMissingInput(missing_probs[mp],1)
+                    auto.setErrorInput(missing_probs[mp],1)
                     auto.generate_automata()
-                    correct, time,_ = learnAutomata_WithTeacher(auto,st_num*100+i,1000,en*st_num,learn_once=True)
+                    correct, time,_ = learnAutomata_WithTeacher(auto,st_num*100+i,1000,en,learn_once=True)
                     if(correct):
                         correct_num += 1
                         total_time += time
@@ -1621,20 +1670,20 @@ def produceMissingErrorGraph():
     plt.ylabel('Accuracy')
     plt.legend(handles=patches)
     plt.show() 
-    plot_file = 'miss_different_percentage_prob_1_state2to4_run50.png'
+    plot_file = 'miss_different_percentage_prob_1_state3to5_run30.png'
     plt.savefig(plot_file)
     
     plt.clf()
     plt.plot(missing_probs,time_rec,'-ob')
     plt.xlabel('Noisy level')
     plt.ylabel('Average learning time')
-    plot_file = 'avgLearnTimeOver50Run_state2~4AgainstNoisyLevel.png'
+    plot_file = 'avgLearnTimeRun_state3~5AgainstNoisyLevel.png'
     plt.savefig(plot_file)
     
     print 'finished !!!'
 
 
-# In[98]:
+# In[1101]:
 
 def getAutomataWithEdgeNum(st_num,edge_num):
     auto = Automata(st_num,0,1)
@@ -1652,10 +1701,13 @@ def plotLearnTimeEdgeGraphWithFunc(st_edge_dict,func,name,patches):
         edge_records = st_edge_dict[st_num]
         x = edge_records.keys()
         y = []
+        err = []
         for k in x:
             rec = edge_records[k]
             y.append(func(rec))
-        plt.plot(x,y,'-o' + cl.pop(0))
+            err.append(calcSTD(rec))
+#         plt.errorbar(num_states,log_avg_learn,fmt='b'+draw_style,yerr=[logErr,logErr])
+        plt.errorbar(x,y,fmt = '-o' + cl.pop(0),yerr = [err,err])
     plt.xlabel('Number of edges')
     plt.ylabel('learning time')
     plt.legend(handles = patches)
@@ -1666,19 +1718,20 @@ def avg(n):
 
 def produceLearnTimeAgainstEdge(run_total):
     
-    print 'produce for learn against edges'
+    print 'produce for learn against edges '
     draw_style = '-o'
 
     clearLogDir()
 
-    num_states = [2,3,4,5,6,7,8]
+    num_states = [4,5,6,7,8,9]
     
     assert(len(num_states) <= len(draw_colors))
     
     st_edge_dict = {}
     for n in num_states:
+        print 'state number:', n
         record = {}
-        for l in range(n-1,n*2+1):
+        for l in range(n-1,n+1):
             learn_time = []
             for i in range(run_total):
                 auto = getAutomataWithEdgeNum(n,l)
@@ -1705,18 +1758,12 @@ def produceLearnTimeAgainstEdge(run_total):
     for i in range(len(num_states)):
         patches.append(mpatches.Patch(color=draw_colors[i],label='state number {}'.format(num_states[i]) ))
     
-    
-    #Max
-    plotLearnTimeEdgeGraphWithFunc(st_edge_dict,max,'learn_time_against_edgesMax',patches)
-    
-    plotLearnTimeEdgeGraphWithFunc(st_edge_dict,min,'learn_time_against_edgesMin',patches)
-    
-    plotLearnTimeEdgeGraphWithFunc(st_edge_dict,avg,'learn_time_against_edgesAvg',patches)
+    plotLearnTimeEdgeGraphWithFunc(st_edge_dict,avg,'learn_time_against_edgesAvg_st5',patches)
     
     print 'finished !!!'
 
 
-# In[113]:
+# In[1102]:
 
 
 def produceLearnTimeAgainstState(run_total):
@@ -1726,7 +1773,7 @@ def produceLearnTimeAgainstState(run_total):
 
     clearLogDir()
 
-    num_states = [2,3,4,5,6,7]
+    num_states = [2,3,4,5]
 
     record = {}
     for st_num in num_states:
@@ -1736,10 +1783,13 @@ def produceLearnTimeAgainstState(run_total):
             auto.generate_automata()
             num_edges = len(list( auto.graph.edges()))
             correct, time,iteration = learnAutomata_WithTeacher(auto,st_num*1000+i,1000,10,learn_once=False)
+            correct, time_t,iteration = learnAutomata_WithTeacher_tmp(auto,st_num*1000+i,1000,10,learn_once=False)
+            
+            add_rec = (time_t-time)/time
             if(not st_num in record):
-                record[st_num] = [time]
+                record[st_num] = [add_rec]
             else:
-                record[st_num].append(time)
+                record[st_num].append(add_rec)
 
     err_std = []
     avg_learn=[]
@@ -1751,22 +1801,32 @@ def produceLearnTimeAgainstState(run_total):
         avg_learn.append(avg)
 
 
+#     plt.clf()
+#     plt.xlabel('Number of States')
+#     plt.ylabel('Log_e(Avg Learning time in seconds)')
+#     plt.gca().axes.get_xaxis().set_ticks(num_states)
+    
+#     log_avg_learn = mapLog(avg_learn)
+#     logErr = mapLog(err_std)
+    
+#     plt.errorbar(num_states,log_avg_learn,fmt='b'+draw_style,yerr=[logErr,logErr])
+#     plot_file = 'learning_LOG_time_states_avg_errbar_567.png'
+#     plt.savefig(plot_file)
+    
+    
     plt.clf()
     plt.xlabel('Number of States')
-    plt.ylabel('Average Learning time')
+    plt.ylabel('Relative time difference')
     plt.gca().axes.get_xaxis().set_ticks(num_states)
-    
-    log_avg_learn = mapLog(avg_learn)
-    logErr = mapLog(err_std)
-    
-    plt.errorbar(num_states,log_avg_learn,fmt='b'+draw_style,yerr=[logErr,logErr])
-    plot_file = 'learning_time_against_states_avg.png'
+    plt.plot(num_states,avg_learn,'r'+draw_style)
+    plot_file = 'LearTime_state_fixedStatenumLimit_7COmpare.png'
     plt.savefig(plot_file)
+    
     
     print 'finished !!!'
 
 
-# In[100]:
+# In[1103]:
 
 def plotDeltaNumDistribution():
     rec = {}
@@ -1793,7 +1853,7 @@ def plotDeltaNumDistribution():
 
 
 
-# In[101]:
+# In[1104]:
 
 def pickRegisterAutomata(st_num,reg_num):
     dir_name =  './useIlasp/RegAutomataPool/regAutomataState_{}Reg_{}'.format(st_num,reg_num)
@@ -1848,9 +1908,334 @@ def plotRegAutomataLearnTime(run_total):
         
 
 
-# In[114]:
+# In[1105]:
 
-produceLearnTimeAgainstState(20)
+
+def compareEncoding(num_states,run_total):
+    
+    print 'produce for learn against state'
+    draw_style = '-o'
+
+    clearLogDir()
+    record = {}
+    for st_num in num_states:
+        print 'for state number', st_num
+        for i in range(run_total):
+            auto = Automata(st_num,0,1)
+            auto.generate_automata()
+            num_edges = len(list( auto.graph.edges()))
+            correct, time,iteration = learnAutomata_WithTeacher(auto,st_num*1000+i,1000,10,False,False)
+
+            _, time_ind,_ = learnAutomata_WithTeacher(auto,st_num*1000+i,1000,10,False,True)
+            if(not st_num in record):
+                record[st_num] = [time_ind - time]
+            else:
+                record[st_num].append(time_ind-time)
+
+    err_std = []
+    avg_learn=[]
+    for k in record.keys():
+        rec = record[k]
+        avg_learn.append(sum(rec))
+
+    
+    plt.clf()
+    plt.xlabel('Number of States')
+    plt.ylabel('Avg diff learn time in seconds')
+    plt.gca().axes.get_xaxis().set_ticks(num_states)
+    plt.plot(num_states,avg_learn,'r'+draw_style)
+    plot_file = 'learn Time Diff.png'
+    plt.savefig(plot_file)
+    
+
+    print 'finished !!!'
+
+
+# In[1106]:
+
+# #nums = [1,2,4,5,7,8,10]
+# # nums = [12,15,18,21,24]
+
+# # for n in nums:
+# #     print str(bin(n))[2:]
+    
+# password = '2-1-4'
+# pass_bin = '010010'
+
+# pos_str_p = ['00','1','011','0101','01000','010011']
+# pos_str =[]
+# for p in pos_str_p:
+#     pos_str.append(string_to_trace(p+pass_bin))
+# neg_str = []
+
+# for i in range(1000):
+#     ran = get_random_inputs(10000)
+#     if(not ran in pos_str_p):
+#         neg_str.append(string_to_trace(ran))
+        
+                
+# exps = traces_to_examples(pos_str,neg_str)
+# completeIlaspEncoding('handCraftPasswordResetOnce_214.lp',exps,7)
+    
+
+
+# In[1107]:
+
+# pos_str_p = range(0,10000,2)
+# pos_str =[]
+
+# for p in random.sample(pos_str_p,100):
+#     pos_str.append(string_to_trace(str(bin(p))[2:] ))
+# neg_str = []
+
+# for i in range(1,1000,2):
+#     neg_str.append(string_to_trace(str(bin(i))[2:]))
+        
+                
+# exps = traces_to_examples(pos_str,neg_str)
+# completeIlaspEncoding('2Dividable.lp',exps,5)
+    
+
+
+# In[1108]:
+
+# results = 'delta(state0,V0,state2,1) :- input(_,V0).\
+# delta(state0,V0,state3,0) :- input(_,V0).\
+# delta(state2,V0,state3,1) :- input(_,V0).\
+# delta(state2,V0,state1,0) :- input(_,V0).\
+# delta(state3,V0,state3,0) :- input(_,V0).\
+# delta(state1,V0,state2,0) :- input(_,V0).\
+# delta(state3,V0,state2,1) :- input(_,V0).\
+# delta(state1,V0,state1,1) :- input(_,V0).'.split('.')
+
+    
+# def getEdgeFromText(txt):
+#     search = re.search(r"delta\(state(\d),V0,state(\d),(\d)\) :- input\(_,V0\)",txt)
+#     return map(int,search.groups())
+    
+    
+# graph = nx.DiGraph() 
+# labels = {}
+# edges = []
+# for idx in range(len(results)-1):
+#     edge = getEdgeFromText(results[idx])
+#     graph.add_edge(edge[0],edge[1])
+#     edges.append((edge[0],edge[1]))
+#     labels[(edge[0],edge[1])] = edge[2]
+
+# g = nx.nx_pydot.to_pydot(graph)
+# # print labels
+    
+# for idx in range(len(results)-1):
+#     edge = g.get_edges()[idx]
+#     delta = (int(edge.obj_dict['points'][0]),int(edge.obj_dict['points'][1]))
+#     edge.obj_dict['attributes']['label'] = labels[delta]
+    
+
+# g.write_png('3devidebale.png')
+
+
+# In[1109]:
+
+def getUsedExample(auto_id):
+    cache_name = 'learningTask.lp.cache'
+    file_name = getLogPath(cache_name,auto_id)
+    with open(file_name) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
+def getModifiedDeltas(raw,auto_id):
+    res = []
+    insert_pos = 6
+    for r in raw:
+        if('delta' in r):
+            res.append(r[:insert_pos] + str(auto_id) + ',' + r[insert_pos:])
+    return ''.join(res)
+    
+def getConditionCode(cond):
+    if(cond == [0,0]):
+        return 0
+    elif(cond ==[1,1]):
+        return 1
+    elif(cond ==[0,1]):
+        return 2    
+
+def getModifiedDeltaFromAuto(auto):
+    res = []
+    template = "delta(0,state{},C,state{},{}):- input(_,C).\n"
+    for d in range(len(auto.deltas)):
+        (fr,to) = auto.deltas[d]
+        cond = getConditionCode(auto.conditions[d])
+        
+        filled = template.format(fr,to,cond)
+        res.append(filled)
+        
+    return ''.join(res)
+
+
+def ILASPExpStateInfo(o_stnum,limit_stnum):
+    res = ''
+    for i in range(limit_stnum):
+        res += 'state(state{}).\n'.format(i)
+    res += 'accept(0) :- st(0,T,state{}), trace_length(T).\n'.format(o_stnum-1)
+    res += 'accept(1) :- st(1,T,state{}), trace_length(T).\n'.format(limit_stnum-1)
+    
+    return res
+    
+    
+def ILASPExpLearnInfo(limit):
+    res = ''
+    for i in range(limit):
+        res += '#constant(step,{}).\n'.format(i)
+        res += '#constant(length,{}).\n'.format(i+1)
+    return res
+
+def checkLearningIsRight_ByILASP(auto,learningRes,learn_id, st_num_limit):
+    a = learningRes.stdout.readline()
+    output = []
+    while(a):
+        if ("UNSATISFIABLE" in a):
+            print 'learning is unsatisiable!, valid edges:', len(getValidEdges(auto))
+            print 'id:', learn_id
+            return False,0
+        output.append(a)
+        a = learningRes.stdout.readline()
+    
+    learned_deltas = getModifiedDeltas(output,1)
+    time = getTimeFromLearning(output[-2])
+    origin_deltas = getModifiedDeltaFromAuto(auto)
+
+    stateInfo = ILASPExpStateInfo(auto.state_num,st_num_limit)
+    learnInfo = ILASPExpLearnInfo(20)
+    
+    template_file = 'useIlasp/learnCounterExpTemplate.lp'
+    find_exp_file = getLogPath('findCounterTMP.lp',learn_id)
+    copyfile(template_file,find_exp_file)
+    
+    append_to_file(find_exp_file, learned_deltas)
+    append_to_file(find_exp_file, origin_deltas)
+    append_to_file(find_exp_file, stateInfo)
+    append_to_file(find_exp_file, learnInfo)
+    
+
+    find_exp = execute_ILASP(find_exp_file)
+    a = find_exp.stdout.readline()
+    trace = ''
+    while(a):
+        if ("UNSATISFIABLE" in a):
+            return True, time, True, ''
+        if('(' in a):
+            trace += a
+        a = find_exp.stdout.readline()
+    
+    trace = ''.join(e for e in trace if e!='\n') + '\n'
+    generated_auto = getGeneratedAutomataFile(learn_id)
+    if(check_trace_valid(trace,generated_auto)):
+#       Return trace as negative example
+        return False, time, True, trace
+    else:
+        return False, time, False, trace
+    
+
+def produceUsedExampleAgainstState(run_total):
+    
+    print 'produce for learn against state'
+    draw_style = '-o'
+
+    clearLogDir()
+
+    num_states = [2,3]
+
+    record = {}
+    for st_num in num_states:
+        print 'for state number', st_num
+        for i in range(run_total):
+            auto = Automata(st_num,0,1)
+            auto.generate_automata()
+            num_edges = len(list( auto.graph.edges()))
+            correct, time,iteration = learnAutomata_WithTeacher(auto,st_num*1000+i,1000,1,learn_once=False)
+            used_exp = getUsedExample(st_num*1000+i)
+            if(not st_num in record):
+                record[st_num] = [used_exp-iteration]
+            else:
+                record[st_num].append(used_exp-iteration)
+
+    err_std = []
+    avg_learn=[]
+    for k in record.keys():
+        rec = record[k]
+        avg = sum(rec) / len(rec)
+
+        err_std.append(calcSTD(rec))
+        avg_learn.append(avg)
+
+
+    plt.clf()
+    plt.xlabel('Number of States')
+    plt.ylabel('used example')
+    plt.gca().axes.get_xaxis().set_ticks(num_states)
+    
+    
+    plt.errorbar(num_states,avg_learn,fmt='b'+draw_style,yerr=[err_std,err_std])
+    plot_file = 'exampleUsedAgainstState.png'
+    plt.savefig(plot_file)
+    
+    
+    print 'finished !!!'
+
+
+# In[ ]:
+
+def LearnRegFromDFA(run_total):
+    
+    print 'produce for learn against state'
+    draw_style = '-o'
+
+    clearLogDir()
+
+    num_states = [2,3,4,5,6,7]
+
+    record = {}
+    for st_num in num_states:
+        print 'for state number', st_num
+        for i in range(run_total):
+            auto = Automata(st_num,0,1)
+            auto.generate_automata()
+            num_edges = len(list( auto.graph.edges()))
+            learn_id = st_num*1000+i
+#             _, time, _ = learnAutomata_WithTeacher(auto,learn_id,1000,10,learn_once=False)
+            _, time_reg, _ = learn_RegAutomata_FromDFA_teacher(auto,st_num+1,3,                                  learn_id,1000,10,learn_once=False)
+            
+            if(not st_num in record):
+                record[st_num] = [time_reg]
+            else:
+                record[st_num].append(time_reg)
+
+    err_std = []
+    avg_learn=[]
+    for k in record.keys():
+        rec = record[k]
+        avg = sum(rec) / len(rec)
+
+        err_std.append(calcSTD(rec))
+        avg_learn.append(avg)
+    
+    plt.clf()
+    plt.xlabel('Number of States')
+    plt.ylabel('Avg learning time difference in seconds')
+    plt.gca().axes.get_xaxis().set_ticks(num_states)
+    plt.plot(num_states,avg_learn,'r'+draw_style)
+    plot_file = 'LearnRegautofromDFA.png'
+    plt.savefig(plot_file)
+    
+    
+    print 'finished !!!'
+
+
+# In[ ]:
+
+produceMissingErrorGraph()
 
 
 # In[ ]:
